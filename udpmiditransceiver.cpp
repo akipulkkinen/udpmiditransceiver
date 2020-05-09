@@ -33,7 +33,6 @@
 
 	 TODO:
 	   - Test that bidirectional transfer of MIDI messages works
-	   - Change usage from typing name of a MIDI instrument to referring to its port number? Issues might include the ordering changing for some reason
 	   - Test effect of polling duration and set default value to sensible?
 
 	-hell1
@@ -87,14 +86,16 @@ int main(int argc, char* argv[]) {
 	// Options that need to be set, some initiated to default value
 	bool UseIn = false;
 	unsigned int PortIn;
-	std::string DeviceIn;
+	//std::string DeviceIn;
+	unsigned int DeviceIn;
 
 	bool UseOut = false;
 	std::string HostOut;
 	unsigned int PortOut;
-	std::string DeviceOut;
+	//std::string DeviceOut;
+	unsigned int DeviceOut;
 
-	unsigned int PollingTime = 10;
+	unsigned int PollingTime = 1;
 
 	bool IgnoreTiming = true;
 	bool IgnoreSensing = true;
@@ -107,7 +108,7 @@ int main(int argc, char* argv[]) {
 	if (isoption(argc, argv, "-port-in")) {
 		PortIn = atoi(getoptionvalue(argc, argv, "-port-in").c_str());
 		if (isoption(argc, argv, "-device-in")) {
-			DeviceIn = getoptionvalue(argc, argv, "-device-in");
+			DeviceIn = atoi(getoptionvalue(argc, argv, "-device-in").c_str());
 			UseIn = true;
 		}
 	}
@@ -117,7 +118,7 @@ int main(int argc, char* argv[]) {
 		if (isoption(argc, argv, "-port-out")) {
 			PortOut = atoi(getoptionvalue(argc, argv, "-port-out").c_str());
 			if (isoption(argc, argv, "-device-out")) {
-				DeviceOut = getoptionvalue(argc, argv, "-device-out");
+				DeviceOut = atoi(getoptionvalue(argc, argv, "-device-out").c_str());
 				UseOut = true;
 			}
 		}
@@ -137,13 +138,15 @@ int main(int argc, char* argv[]) {
 		printf("Following swithces can be used:\n");
 		printf("\n");
 		printf("  -port-in [integer]       Defines from which UDP port to receive MIDI signal\n");
-		printf("  -device-in [string]      Defines which MIDI device receives the signal (input port list)\n");
+		//printf("  -device-in [string]      Defines which MIDI device receives the signal (input port list)\n");
+		printf("  -device-in [integer]      Defines which MIDI device receives the signal (input port list)\n");
 		printf("\n");
 		printf("  -host-out [string]       Defines (ip) address of the device to send MIDI signal to\n");
 		printf("  -port-out [integer]      Defines to which UDP port to send MIDI signal to\n");
-		printf("  -device-out [string]     Defines which MIDI device sends the signal (output port list)\n");
+		//printf("  -device-out [string]     Defines which MIDI device sends the signal (output port list)\n");
+		printf("  -device-out [integer]     Defines which MIDI device sends the signal (output port list)\n");
 		printf("\n");
-		printf("  -polling-time [number]   Defines UDP polling time in milliseconds (default 10)\n");
+		printf("  -polling-time [number]   Defines UDP polling time in milliseconds (default 1)\n");
 		printf("\n");
 		printf("  -timing                  Enables receiving timing related MIDI messages (default disabled)\n");
 		printf("  -sensing                 Enables receiving sensing related MIDI messages (default disabled)\n");
@@ -164,8 +167,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	printf("Running with parameters:\n");
-	if (UseIn) printf(" - Receive MIDI messages through port %d to device '%s'\n", PortIn, DeviceIn.c_str());
-	if (UseOut) printf(" - Send MIDI messages to host '%s' port %d from device '%s'\n", HostOut.c_str(), PortOut, DeviceOut.c_str());
+	//if (UseIn) printf(" - Receive MIDI messages through port %d to device '%s'\n", PortIn, DeviceIn.c_str());
+	if (UseIn) printf(" - Receive MIDI messages through port %d to device %d / %s \n", PortIn, DeviceIn, MIDIout->getPortName(DeviceIn).c_str());
+	//if (UseOut) printf(" - Send MIDI messages to host '%s' port %d from device '%s'\n", HostOut.c_str(), PortOut, DeviceOut.c_str());
+	if (UseOut) printf(" - Send MIDI messages to host '%s' port %d from device %d / %s\n", HostOut.c_str(), PortOut, DeviceOut, MIDIin->getPortName(DeviceOut).c_str());
 	printf(" - Use UDP polling time %d ms\n", PollingTime);
 	if (!IgnoreTiming) printf(" - Receive timing related MIDI messages\n");
 	if (!IgnoreSensing) printf(" - Receive sensing related MIDI messages\n");
@@ -176,7 +181,7 @@ int main(int argc, char* argv[]) {
 	// Find MIDI port numbers and open them. Note: it can be confusing that when we have "UseIn" (i.e. we are expecting to receive MIDI messages) that we use MIDIout where we will send these messages
 	if (UseIn) {
 		try {
-			bool PortFound = false;
+			/*bool PortFound = false;
 			int MIDIPort = -1;
 			int outports = MIDIout->getPortCount();
 			for (int port = 0; port < outports; port++) {
@@ -191,7 +196,9 @@ int main(int argc, char* argv[]) {
 				return(EXIT_FAILURE);
 			}
 			printf("MIDI output port '%s' found at %d\n", DeviceIn.c_str(), MIDIPort);
-			MIDIout->openPort(MIDIPort);
+			MIDIout->openPort(MIDIPort);*/
+
+			MIDIout->openPort(DeviceIn);
 		}
 		catch (RtMidiError& error) {
 			error.printMessage();
@@ -201,7 +208,7 @@ int main(int argc, char* argv[]) {
 
 	if (UseOut) {
 		try {
-			bool PortFound = false;
+			/*bool PortFound = false;
 			int MIDIPort = -1;
 			int inports = MIDIin->getPortCount();
 			for (int port = 0; port < inports; port++) {
@@ -216,7 +223,9 @@ int main(int argc, char* argv[]) {
 				return(EXIT_FAILURE);
 			}
 			printf("MIDI in port '%s' found at %d\n", DeviceOut.c_str(), MIDIPort);
-			MIDIin->openPort(MIDIPort);
+			MIDIin->openPort(MIDIPort);*/
+
+			MIDIin->openPort(DeviceOut);
 			MIDIin->ignoreTypes(IgnoreSysex, IgnoreTiming, IgnoreSensing);
 		}
 		catch (RtMidiError& error) {
