@@ -25,7 +25,6 @@ Windows / Visual Studio 2019:
 
 TODO:
 - Test that bidirectional transfer of MIDI messages works
-- Change usage from typing name of a MIDI instrument to referring to its port number? Issues might include the ordering changing for some reason
 - Test effect of polling duration and set default value to sensible?
 
 -hell1
